@@ -72,13 +72,13 @@ class ImageProcessor:
 
         self.noisy_images.append(Image.fromarray(noisy_image))
 
-    def PGD_denoising(self, index_image,lam,t):
+    def PGD_denoising(self, index_image,lam,t,ep):
         # 近段梯度下降去噪点函数
         image_array = np.array(self.noisy_images[index_image],dtype=np.float64) 
         # 这里正则项选择L1范数，保真项为||y-x||^2
         image_array_k_old = image_array.copy()
         image_array_k = image_array.copy()
-        for i in range(1, 10000):
+        for i in range(1, 100000):
             # 梯度下降
             image_array_k_temp = image_array_k_old - t * (image_array_k_old - image_array)
             # 软阈值函数
@@ -92,11 +92,11 @@ class ImageProcessor:
                         elif channel < -lam * t:
                             image_array_k[x][y][z] = channel + lam * t    
             norm_diff = np.linalg.norm(image_array_k - image_array_k_old)                           
-            if norm_diff < 1e-4:
+            if norm_diff < ep:
                 break
             else:
                 image_array_k_old = image_array_k.copy()
-        print(f'迭代次数为{i}')
+        print(f'迭代次数为{i},误差为{norm_diff}')
         return Image.fromarray(image_array_k.astype(np.uint8))
                         
     def ADMM_denoising(self, index_image, lam, t1, t2, alpha_k):
@@ -107,9 +107,9 @@ class ImageProcessor:
         u_k_old = np.zeros_like(image_array)
         s_k_old = np.zeros_like(image_array)
         u_k = np.zeros_like(image_array)
-        for i in range(1, 1000):
+        for i in range(1, 2000):
             # 更新image_array
-            image_array_k = (1 + 2*t2) * (image_array + t2 * u_k_old - s_k_old) 
+            image_array_k = (1 + 2*t2)**(-1) * (image_array + t2 * u_k_old - s_k_old) 
 
             # 更新u_k
             u_k_temp = u_k_old + t1 * t2 * (image_array_k - u_k_old + (1/t2) * s_k_old)
@@ -125,14 +125,15 @@ class ImageProcessor:
 
             # 更新s_k
             s_k = s_k_old + alpha_k * (image_array_k - u_k)
-            if np.linalg.norm(image_array_k - image_array_k_old) < 1e-3:
+            norm_diff = np.linalg.norm(image_array_k - image_array_k_old)
+            if norm_diff < 1e-3:
                 break    
             else:
                 image_array_k_old = image_array_k.copy()
                 u_k_old = u_k.copy()
                 s_k_old = s_k.copy()
-                k += 1
-        print(f'迭代次数为{i}')
+            
+        print(f'迭代次数为{i},误差为{norm_diff}')
         return Image.fromarray(image_array_k.astype(np.uint8))
 
 
