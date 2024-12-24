@@ -1,0 +1,9 @@
+.mrcs文件中是(N,64,64)的电镜图像，cryoDRGN可以直接读取，也可以用GPT写脚本读取。
+.pkl文件中是([N,3,3],[N,2,2])的角度和相对中心的偏移（模拟数据中是0）信息, cryoDRGN可以直接读取，也可以手动读取：
+
+import pickle
+with open(file_path, 'rb') as f:
+    data = pickle.load(f)
+    
+Rotations = data[0]
+Translations = data[1]

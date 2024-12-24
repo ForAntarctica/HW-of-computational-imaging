@@ -1,0 +1,1 @@
+python analyze.py /path/to/output_folder trained_epoch_num -o /path/to/analyze_output_folder

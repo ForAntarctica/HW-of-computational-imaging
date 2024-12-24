@@ -1,0 +1,1 @@
+python train_vae.py 7bcq.mrcs --poses 7bcq_pose.pkl --uninvert-data -b 8 -n 501 --dec-dim 256 --zdim 8 -o 7bcq --checkpoint 100
